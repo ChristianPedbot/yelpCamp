@@ -1,0 +1,44 @@
+version: '3'
+services:
+  node:
+    build: .
+    container_name: node
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./:/usr/src/app
+    networks:
+      - yelp
+    depends_on:
+      - mysql
+
+  mysql:
+    image: mysql:latest
+    container_name: mysql
+    ports:
+      - "3307:3306" 
+    volumes:
+      - mysqldb:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: "root"
+      MYSQL_DATABASE: "yelpcamp"
+      MYSQL_ROOT_HOST: "%"
+    networks:
+      - yelp
+
+  phpmyadmin:
+    image: phpmyadmin
+    container_name: phpmyadmin
+    environment:
+      PMA_HOST: mysql
+      PMA_ARBITRARY: "1"
+    ports:
+      - "8080:80"
+    networks:
+      - yelp
+
+networks:
+  yelp:
+
+volumes:
+  mysqldb:
