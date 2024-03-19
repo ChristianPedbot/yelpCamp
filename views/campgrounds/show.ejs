@@ -1,13 +1,15 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Show</title>
-</head>
-<body>
-    <ul>
-        <li><%= campground.title %> - <%= campground.price %></li>
-    </ul>
-</body>
-</html>
+<% layout('boilerplate.ejs') %>
+<ul>
+    <li><%= campground.title %> - <%= campground.price %></li>
+    <img src="<%= campground.image %>" alt="">
+    <l1><%=campground.description%></l1> 
+    <footer>
+        <a href="/campgrounds/<%= campground.id%>/edit">Edit</a>
+        <a href="/campgrounds">All campgrounds</a>
+    </footer>
+    <li>
+        <form action="/campgrounds/<%=campground.id%>?_method=DELETE" method="POST">
+            <button type="submit">DELETE</button>
+        </form>
+    </li>
+</ul>
