@@ -35,12 +35,26 @@ app.set('views', [
     path.join(__dirname, 'views', 'layouts')
 ]);
 
-// Middleware para processar dados do formulário
 app.use(express.urlencoded({ extended: true }));
 
 app.get('/campgrounds/new', (req , res) => {
     res.render('new');
 });
+
+app.post('/campgrounds/:id/review', (req, res) => {
+    const campgroundId = req.params.id;
+    const { body, rating } = req.body.review; 
+    connection.query('INSERT INTO review (body, rating, campground_id) VALUES (?, ?, ?)', [body, rating, campgroundId], (error, results, fields) => {
+        if (error) {
+            console.error('Erro ao inserir a nova revisão:', error);
+            return res.status(500).send('Erro interno do servidor');
+        }
+        console.log('Nova revisão inserida com sucesso');
+        res.redirect('/campgrounds/' + campgroundId); // Redireciona de volta para a página do acampamento após a inserção da revisão
+    });
+});
+
+
 
 app.post('/campgrounds', (req, res) => {
     const { title, price, description, location, image } = req.body.campground; 
@@ -53,7 +67,6 @@ app.post('/campgrounds', (req, res) => {
         res.redirect('/campgrounds'); 
     });
 });
-
 
 
 app.get('/campgrounds', (req, res) => {
@@ -72,18 +85,39 @@ app.get('/campgrounds', (req, res) => {
 
 app.get('/campgrounds/:id', (req, res) => {
     const campgroundId = req.params.id;
-    connection.query('SELECT * FROM campgrounds WHERE id = ?', campgroundId, (error, results, fields) => {
+
+    // Consulta para obter os dados do acampamento
+    const campgroundQuery = 'SELECT * FROM campgrounds WHERE id = ?';
+
+    // Consulta para obter as revisões associadas ao acampamento
+    const reviewsQuery = 'SELECT * FROM review WHERE campground_id = ?';
+
+    // Executar a consulta do acampamento
+    connection.query(campgroundQuery, campgroundId, (error, campgroundResults, fields) => {
         if (error) {
-            console.error('Erro ao executar a consulta:', error);
+            console.error('Erro ao executar a consulta do acampamento:', error);
             return res.status(500).send('Erro interno do servidor');
         }
-        if (!results || results.length === 0) {
-            console.error('Nenhum resultado retornado pela consulta.');
-            return res.status(404).send('Nenhum resultado encontrado');
+
+        if (campgroundResults.length === 0) {
+            console.error('Nenhum resultado retornado pela consulta do acampamento.');
+            return res.status(404).send('Nenhum acampamento encontrado');
         }
-        res.render('show', { campground: results[0] });
+
+        const campground = campgroundResults[0];
+
+        // Executar a consulta das revisões associadas ao acampamento
+        connection.query(reviewsQuery, campgroundId, (error, reviewsResults, fields) => {
+            if (error) {
+                console.error('Erro ao executar a consulta de revisões:', error);
+                return res.status(500).send('Erro interno do servidor');
+            }
+
+            res.render('show', { campground, reviews: reviewsResults });
+        });
     });
 });
+
 
 app.delete('/campgrounds/:id', (req, res) => {
     const campgroundId = req.params.id;
@@ -102,7 +136,6 @@ app.delete('/campgrounds/:id', (req, res) => {
 
 app.get('/campgrounds/:id/edit', (req, res) => {
     const campgroundId = req.params.id;
-    // Aqui você deve executar uma consulta para obter os dados do acampamento com o ID especificado
     connection.query('SELECT * FROM campgrounds WHERE id = ?', campgroundId, (error, results, fields) => {
         if (error) {
             console.error('Erro ao executar a consulta:', error);
@@ -112,16 +145,13 @@ app.get('/campgrounds/:id/edit', (req, res) => {
             console.error('Nenhum resultado retornado pela consulta.');
             return res.status(404).send('Nenhum resultado encontrado');
         }
-        // Renderizar o formulário de edição e passar os dados do acampamento para ele
-        res.render('edit', { campground: results[0] }); // Supondo que você tenha um arquivo EJS chamado "edit.ejs"
+        res.render('edit', { campground: results[0] }); 
     });
 });
 
 app.put('/campgrounds/:id', (req, res) => {
     const campgroundId = req.params.id;
     const updatedCampground = req.body.campground;
-
-    // Aqui você deve executar uma consulta SQL para atualizar os dados do acampamento no banco de dados
     connection.query('UPDATE campgrounds SET title = ?, price = ?, description = ?, location = ? WHERE id = ?',
         [updatedCampground.title, updatedCampground.price, updatedCampground.description, updatedCampground.location, campgroundId],
         (error, results, fields) => {
@@ -129,15 +159,11 @@ app.put('/campgrounds/:id', (req, res) => {
                 console.error('Erro ao executar a consulta de atualização:', error);
                 return res.status(500).send('Erro interno do servidor');
             }
-            res.redirect('/campgrounds/' + campgroundId); // Redirecionar para a página do acampamento atualizado
+            res.redirect('/campgrounds/' + campgroundId);  
         }
     );
 });
 
-
-app.get('/show', (req, res) => {
-    res.render('show');
-});
 
 app.listen(3000, () => {
     console.log("Ouvindo na porta 3000");

@@ -1,6 +1,6 @@
 FROM node:latest
 
-RUN npm install -g nodemon
+RUN npm install 
 
 WORKDIR /usr/src/app
 
@@ -12,4 +12,4 @@ COPY . .
 
 EXPOSE 3000
 
-CMD ["npm", "start"]
+CMD ["npx","nodemon", "app.js"]
