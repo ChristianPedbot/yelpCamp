@@ -50,7 +50,7 @@ app.post('/campgrounds/:id/review', (req, res) => {
             return res.status(500).send('Erro interno do servidor');
         }
         console.log('Nova revisão inserida com sucesso');
-        res.redirect('/campgrounds/' + campgroundId); // Redireciona de volta para a página do acampamento após a inserção da revisão
+        res.redirect('/campgrounds/' + campgroundId); 
     });
 });
 
@@ -85,38 +85,29 @@ app.get('/campgrounds', (req, res) => {
 
 app.get('/campgrounds/:id', (req, res) => {
     const campgroundId = req.params.id;
-
-    // Consulta para obter os dados do acampamento
     const campgroundQuery = 'SELECT * FROM campgrounds WHERE id = ?';
-
-    // Consulta para obter as revisões associadas ao acampamento
     const reviewsQuery = 'SELECT * FROM review WHERE campground_id = ?';
-
-    // Executar a consulta do acampamento
     connection.query(campgroundQuery, campgroundId, (error, campgroundResults, fields) => {
         if (error) {
             console.error('Erro ao executar a consulta do acampamento:', error);
             return res.status(500).send('Erro interno do servidor');
         }
-
         if (campgroundResults.length === 0) {
             console.error('Nenhum resultado retornado pela consulta do acampamento.');
             return res.status(404).send('Nenhum acampamento encontrado');
         }
-
         const campground = campgroundResults[0];
-
-        // Executar a consulta das revisões associadas ao acampamento
         connection.query(reviewsQuery, campgroundId, (error, reviewsResults, fields) => {
             if (error) {
                 console.error('Erro ao executar a consulta de revisões:', error);
                 return res.status(500).send('Erro interno do servidor');
             }
-
             res.render('show', { campground, reviews: reviewsResults });
         });
     });
 });
+
+
 
 
 app.delete('/campgrounds/:id', (req, res) => {
@@ -133,6 +124,22 @@ app.delete('/campgrounds/:id', (req, res) => {
         res.redirect('/campgrounds'); 
     });
 });
+
+app.delete('/campgrounds/:id/reviews/:id', (req, res) => {
+    const campgroundId = req.params.id;
+    connection.query('DELETE FROM review WHERE id = ?', campgroundId, (error, results, fields) => {
+        if (error) {
+            console.error('Erro ao executar a consulta:', error);
+            return res.status(500).send('Erro interno do servidor');
+        }
+        if (!results || results.affectedRows === 0) {
+            console.error('Nenhum resultado retornado pela consulta.');
+            return res.status(404).send('Nenhum ressultado encontrado');
+        }
+        res.redirect('/campgrounds'); 
+    });
+});
+
 
 app.get('/campgrounds/:id/edit', (req, res) => {
     const campgroundId = req.params.id;
