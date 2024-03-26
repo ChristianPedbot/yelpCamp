@@ -1,12 +1,7 @@
 <% layout('boilerplate.ejs') %>
-<form action="/register" method="POST"> <!-- Defina o action como a rota de registro -->
+<form action="/login" method="post">
     <div class="mb-3">
-        <h3>Register</h3>
-        <label class="form-label" for="username">Username</label>
-        <input class="form-control" type="text" id="username" name="username" required>
-        <div class="valid-feedback">
-            Looks good
-        </div>
+        <h3>Login</h3>
     </div>
     <div class="mb-3">
         <label class="form-label" for="email">Email</label>
@@ -22,5 +17,5 @@
             Looks good
         </div>
     </div>
-    <button type="submit" class="btn btn-primary">Register</button> <!-- Botão de envio do formulário -->
+    <button type="submit" class="btn btn-success">Login</button>
 </form>

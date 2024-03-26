@@ -3,8 +3,7 @@ const router = express.Router({ mergeParams: true }); // Certifique-se de que me
 const mysql = require('mysql');
 const methodOverride = require('method-override');
 
-// Adicione o middleware express.urlencoded() aqui
-router.use(express.urlencoded({ extended: true }));
+
 
 const { handleQueryError, handleNoResults } = require('../app');
 
