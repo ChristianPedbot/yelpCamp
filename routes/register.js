@@ -1,9 +1,10 @@
-require('dotenv').config();
+// routes/register.js
+
 const express = require('express');
 const router = express.Router();
+const bcrypt = require('bcryptjs');
 const mysql = require('mysql');
 
-// Configure your database connection
 const connection = mysql.createConnection({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
@@ -11,34 +12,28 @@ const connection = mysql.createConnection({
     database: process.env.DB_NAME
 });
 
-// Handle GET request for the registration form
 router.get('/', (req, res) => {
-    res.render('register'); // Assuming you have a register.ejs file for the registration form
+    res.render('register'); // Renderiza o formulário de registro (register.ejs)
 });
 
-// Handle POST request for registering a new user
-router.post('/', (req, res) => {
-    const { username, email, password } = req.body;
+// Rota para processar o envio do formulário de registro
+router.post('/', async (req, res) => {
+    const { username,email, password } = req.body;
 
-    // Hash the password
-    bcrypt.hash(password, 10, (err, hashedPassword) => {
-        if (err) {
-            console.error('Error hashing password:', err);
-            return res.status(500).send('Internal Server Error');
-        }
+    try {
+        // Gerar hash da senha
+        const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Insert the new user into the database
-        const sql = 'INSERT INTO users (username, email, password) VALUES (?, ?, ?)';
-        connection.query(sql, [username, email, hashedPassword], (error, results) => {
-            if (error) {
-                console.error('Error registering user:', error);
-                return res.status(500).send('Error Registering User');
-            }
-
-            console.log('User registered successfully');
-            res.redirect('/login'); // Redirect to login page after successful registration
-        });
-    });
+        // Inserir usuário no banco de dados
+        await connection.query('INSERT INTO users (username ,email, password) VALUES (?, ?, ?)', [username ,email, hashedPassword]);
+        console.log("deu certo");
+        req.flash('success', 'Usuário registrado com sucesso!');
+        res.redirect('/login'); // Redireciona para a página de login após o registro bem-sucedido
+    } catch (error) {
+        console.error('Erro durante o registro:', error);
+        req.flash('error', 'Erro durante o registro. Por favor, tente novamente.');
+        res.redirect('/register'); // Redireciona de volta para o formulário de registro em caso de erro
+    }
 });
 
 module.exports = router;

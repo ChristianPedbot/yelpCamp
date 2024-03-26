@@ -57,7 +57,4 @@ passport.use(new LocalStrategy({
 
 module.exports = function(app) {
     app.use(passport.initialize());
-    app.use(passport.session());
-
-    // Outras configurações do Passport.js aqui
 };

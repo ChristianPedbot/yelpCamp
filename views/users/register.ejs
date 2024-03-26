@@ -1,5 +1,5 @@
 <% layout('boilerplate.ejs') %>
-<form action="/register" method="POST"> <!-- Defina o action como a rota de registro -->
+<form action="/users/register" method="post"> 
     <div class="mb-3">
         <h3>Register</h3>
         <label class="form-label" for="username">Username</label>
@@ -22,5 +22,4 @@
             Looks good
         </div>
     </div>
-    <button type="submit" class="btn btn-primary">Register</button> <!-- Botão de envio do formulário -->
-</form>
+    <button type="submit" class="btn btn-primary">Register</button> 

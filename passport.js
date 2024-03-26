@@ -1,3 +1,28 @@
+const bcrypt = require('bcryptjs');
+const passport = require('passport');
+const LocalStrategy = require('passport-local').Strategy;
+const { Sequelize, DataTypes } = require('sequelize');
+
+const sequelize = new Sequelize('mysql://root:root@mysql:3306/yelpcamp');
+
+const User = sequelize.define('users', {
+    email: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        unique: true
+    },
+    password: {
+        type: DataTypes.STRING,
+        allowNull: false
+    }
+});
+
+// Função para verificar se a senha fornecida corresponde à senha armazenada
+User.prototype.validPassword = function(password) {
+    return bcrypt.compareSync(password, this.password);
+};
+
+// Configuração da estratégia local de autenticação
 passport.use(new LocalStrategy({
     usernameField: 'email',
     passwordField: 'password'
@@ -24,5 +49,8 @@ passport.use(new LocalStrategy({
     .catch(err => {
         return done(err);
     });
-
 }));
+
+module.exports = function(app) {
+    app.use(passport.initialize());
+};
