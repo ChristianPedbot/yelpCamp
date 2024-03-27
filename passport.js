@@ -17,32 +17,27 @@ const User = sequelize.define('users', {
     }
 });
 
-// Função para verificar se a senha fornecida corresponde à senha armazenada
 User.prototype.validPassword = function(password) {
     return bcrypt.compareSync(password, this.password);
 };
 
-// Configuração da estratégia local de autenticação
 passport.use(new LocalStrategy({
     usernameField: 'email',
     passwordField: 'password'
 }, (email, password, done) => {
-    User.findOne({ where: { email: email } }) // Busca o usuário com base no e-mail
+    User.findOne({ where: { email: email } })
     .then(user => {
         if (!user) {
-            return done(null, false, { message: 'Usuário não encontrado.' });
+            return done(null, false);
         }
-        // Verifica se a senha fornecida pelo usuário corresponde à senha hash armazenada no banco de dados
         bcrypt.compare(password, user.password, (err, result) => {
             if (err) {
                 return done(err);
             }
             if (result) {
-                // Se as senhas correspondem, autenticação bem-sucedida, retornando o usuário
                 return done(null, user);
             } else {
-                // Senha incorreta
-                return done(null, false, { message: 'Senha incorreta.' });
+                return done(null, false);
             }
         });
     })

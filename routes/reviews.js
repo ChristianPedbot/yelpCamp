@@ -1,36 +1,34 @@
 const express = require('express');
-const router = express.Router({ mergeParams: true }); // Certifique-se de que mergeParams esteja definido como true
+const router = express.Router(); 
 const mysql = require('mysql');
-const methodOverride = require('method-override');
 
-
-
-const { handleQueryError, handleNoResults } = require('../app');
-
-const connection = mysql.createConnection({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME
-});
-
-
-router.post('/:id/review', (req, res) => { // Corrija a rota para /:id/review
-    const campgroundId = req.params.id;
-    const { body, rating } = req.body.review; 
-    connection.query('INSERT INTO review (body, rating, campground_id) VALUES (?, ?, ?)', [body, rating, campgroundId], (error, results) => {
-        if (error) return handleQueryError(res, error);
-        console.log('Nova revisão inserida com sucesso');
-        res.redirect('/campgrounds/' + campgroundId); 
-    });
-});
+const connection = require('../utils/db');
 
 router.delete('/:id', (req, res) => {
-    const campgroundId = req.params.id;
-    connection.query('DELETE FROM review WHERE id = ?', campgroundId, (error, results) => {
-        if (error) return handleQueryError(res, error);
-        if (!results || results.affectedRows === 0) return handleNoResults(res);
-        res.redirect('/campgrounds'); 
+    if (!req.isAuthenticated()) {
+        req.flash('error', 'You must be signed in.');
+        return res.redirect('/login');
+    }
+    const reviewId = req.params.id; 
+    const userId = req.user.id; 
+    connection.query('SELECT user_id FROM review WHERE id = ?', reviewId, (error, results) => {
+        if (error) {
+            req.flash('error', 'Error deleting review.');
+            return res.redirect('back'); 
+        }
+        if (results.length === 1 && results[0].user_id === userId) {
+            connection.query('DELETE FROM review WHERE id = ?', reviewId, (error, results) => {
+                if (error) {
+                    req.flash('error', 'Error deleting review.');
+                    return res.redirect('back'); 
+                }
+                req.flash('success', 'Review successfully removed.');
+                res.redirect('back'); 
+            });
+        } else { 
+            req.flash('error', 'You are not authorized to delete this review.');
+            res.redirect('back');
+        }
     });
 });
 

@@ -12,12 +12,12 @@ const flash = require('connect-flash');
 const methodOverride = require('method-override');
 
 const loginRouter = require('./routes/login');
+const logoutRouter = require('./routes/logout');
 const registerRouter = require('./routes/register');
 const campgrounds = require('./routes/campgrounds');
 const reviews = require('./routes/reviews');
 const users = require('./routes/users');
 
-// Importando a configuração do Passport.js
 require('./auth')(passport);
 
 const sessionConfig = {
@@ -37,29 +37,20 @@ app.use(passport.session());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(flash());
+
+app.use((req, res, next) => {
+    res.locals.success = req.flash('success');
+    res.locals.error = req.flash('error');
+    next();
+})
+
 app.use('/campgrounds', campgrounds);
 app.use('/campgrounds/:id/reviews', reviews);
 app.use('/users', users);
 app.use('/login', loginRouter);
+app.use('/logout', logoutRouter);
 app.use('/users/register', registerRouter);
 
-// Configuração do banco de dados
-const connection = mysql.createConnection({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME
-});
-
-function handleQueryError(res, error) {
-    console.error('Erro ao executar a consulta:', error);
-    return res.status(500).send('Erro interno do servidor');
-}
-
-function handleNoResults(res) {
-    console.error('Nenhum resultado retornado pela consulta.');
-    return res.status(404).send('Nenhum resultado encontrado');
-}
 
 app.engine('ejs', ejsMate);
 app.set('view engine', 'ejs');

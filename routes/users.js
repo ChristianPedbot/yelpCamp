@@ -7,12 +7,13 @@ const session = require('express-session');
 const flash = require('connect-flash');
 const bcrypt = require('bcrypt');
 
-const connection = mysql.createConnection({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME
-});
+const connection = require('../utils/db');
+
+router.post('/logout', (req, res) => {
+    req.logout();
+    req.flash('success', 'Goodbye!');
+    res.redirect('/campgrounds');
+})
 
 router.use(session({
     secret: 'secret',
@@ -33,7 +34,7 @@ async (email, password, done) => {
         const rows = await findUserByEmail(email);
 
         if (rows.length === 0) {
-            return done(null, false, { message: 'Usuário não encontrado.' });
+            return done(null, false);
         }
 
         const user = rows[0];
@@ -43,7 +44,7 @@ async (email, password, done) => {
         if (passwordMatch) {
             return done(null, user);
         } else {
-            return done(null, false, { message: 'Senha incorreta.' });
+            return done(null, false);
         }
     } catch (error) {
         return done(error);
@@ -64,7 +65,6 @@ passport.deserializeUser((id, done) => {
         });
 });
 
-// Funções auxiliares para consultas ao banco de dados
 async function findUserByEmail(email) {
     return new Promise((resolve, reject) => {
         connection.query('SELECT * FROM users WHERE email = ?', [email], (error, results) => {
