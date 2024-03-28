@@ -2,20 +2,12 @@ const express = require('express');
 const router = express.Router();
 const passport = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
-const mysql = require('mysql');
-const session = require('express-session');
-const flash = require('connect-flash');
 const bcrypt = require('bcrypt');
+const flash = require('connect-flash');
 
 const connection = require('../utils/db');
 
-router.post('/logout', (req, res) => {
-    req.logout();
-    req.flash('success', 'Goodbye!');
-    res.redirect('/campgrounds');
-})
-
-router.use(session({
+router.use(require('express-session')({
     secret: 'secret',
     resave: true,
     saveUninitialized: true
@@ -29,26 +21,30 @@ passport.use(new LocalStrategy({
     usernameField: 'email',
     passwordField: 'password'
 },
-async (email, password, done) => {
-    try {
-        const rows = await findUserByEmail(email);
-
-        if (rows.length === 0) {
-            return done(null, false);
+(email, password, done) => {
+    connection.query('SELECT * FROM users WHERE email = ?', [email], (error, results) => {
+        if (error) {
+            return done(error);
         }
 
-        const user = rows[0];
-
-        const passwordMatch = await bcrypt.compare(password, user.password);
-
-        if (passwordMatch) {
-            return done(null, user);
-        } else {
-            return done(null, false);
+        if (results.length === 0) {
+            return done(null, false, { message: 'Incorrect email.' });
         }
-    } catch (error) {
-        return done(error);
-    }
+
+        const user = results[0];
+
+        bcrypt.compare(password, user.password, (err, passwordMatch) => {
+            if (err) {
+                return done(err);
+            }
+
+            if (passwordMatch) {
+                return done(null, user);
+            } else {
+                return done(null, false, { message: 'Incorrect password.' });
+            }
+        });
+    });
 }));
 
 passport.serializeUser((user, done) => {
@@ -56,37 +52,14 @@ passport.serializeUser((user, done) => {
 });
 
 passport.deserializeUser((id, done) => {
-    findUserById(id)
-        .then(user => {
-            done(null, user);
-        })
-        .catch(err => {
-            done(err, null);
-        });
+    connection.query('SELECT * FROM users WHERE id = ?', [id], (error, results) => {
+        if (error) {
+            return done(error);
+        }
+        
+        const user = results[0];
+        done(null, user);
+    });
 });
-
-async function findUserByEmail(email) {
-    return new Promise((resolve, reject) => {
-        connection.query('SELECT * FROM users WHERE email = ?', [email], (error, results) => {
-            if (error) {
-                reject(error);
-            } else {
-                resolve(results);
-            }
-        });
-    });
-}
-
-async function findUserById(id) {
-    return new Promise((resolve, reject) => {
-        connection.query('SELECT * FROM users WHERE id = ?', [id], (error, results) => {
-            if (error) {
-                reject(error);
-            } else {
-                resolve(results[0]);
-            }
-        });
-    });
-}
 
 module.exports = router;

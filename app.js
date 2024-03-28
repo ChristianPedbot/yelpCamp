@@ -3,13 +3,10 @@ require('dotenv').config();
 const express = require('express');
 const app = express();
 const path = require('path');
-const mysql = require('mysql');
 const passport = require('passport');
-const bcrypt = require('bcryptjs');
 const session = require('express-session');
 const ejsMate = require('ejs-mate');
 const flash = require('connect-flash');
-const methodOverride = require('method-override');
 
 const loginRouter = require('./routes/login');
 const logoutRouter = require('./routes/logout');
@@ -18,7 +15,7 @@ const campgrounds = require('./routes/campgrounds');
 const reviews = require('./routes/reviews');
 const users = require('./routes/users');
 
-require('./auth')(passport);
+require('./utils/auth')(passport);
 
 const sessionConfig = {
     secret: '123',
