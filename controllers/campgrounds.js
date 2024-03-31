@@ -27,28 +27,41 @@ module.exports.index = (req, res) => {
     });
 }
 
+const multer = require('multer');
+const { storage } = require('../cloudinary');
+const upload = multer({ storage });
+
 module.exports.insertCamp = (req, res) => {
-    if (!req.isAuthenticated()) {
-        req.flash('error', 'You must be signed in.');
-        return res.redirect('/login');
-    }
-
-    const userId = req.user.id; 
-    const { title, price, description, location, image } = req.body.campground;
-
-    connection.query(
-        'INSERT INTO campgrounds (title, price, description, location, image, user_id) VALUES (?, ?, ?, ?, ?, ?)',
-        [title, price, description, location, image, userId],
-        (error, results) => {
-            if (error) {
-                req.flash('error', 'Error creating campground.');
-                return res.redirect('/campgrounds/new');
-            }
-
-            req.flash('success', 'Campground created successfully.');
-            res.redirect('/campgrounds');
+    upload.single('image')(req, res, (err) => {
+        if (err) {
+            req.flash('error', 'Error uploading image.');
+            return res.redirect('/campgrounds/new');
         }
-    );
+
+        if (!req.isAuthenticated()) {
+            req.flash('error', 'You must be signed in.');
+            return res.redirect('/login');
+        }
+
+        const userId = req.user.id; 
+        const { title, price, description, location } = req.body.campground;
+
+        const image = req.file.path; 
+
+        connection.query(
+            'INSERT INTO campgrounds (title, price, description, location, image, user_id) VALUES (?, ?, ?, ?, ?, ?)',
+            [title, price, description, location, image, userId],
+            (error, results) => {
+                if (error) {
+                    req.flash('error', 'Error creating campground.');
+                    return res.redirect('/campgrounds/new');
+                }
+
+                req.flash('success', 'Campground created successfully.');
+                res.redirect('/campgrounds');
+            }
+        );
+    });
 }
 
 module.exports.insertReview = (req, res) => {

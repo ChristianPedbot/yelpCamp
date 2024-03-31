@@ -2,9 +2,13 @@ const express = require('express');
 const methodOverride = require('method-override');
 const router = express.Router();
 const campController = require('../controllers/campgrounds');
+const multer = require('multer');
+const {storage} = require('../cloudinary');
+const upload = multer({ storage });
 router.use(methodOverride('_method'));
 
 router.get('/new', campController.new);
+
 
 router.get('/register', campController.registerRedirect);
 

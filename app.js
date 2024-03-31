@@ -1,4 +1,6 @@
-require('dotenv').config();
+if (process.env.NODE_ENV !== "production"){
+    require('dotenv').config();
+}
 
 const express = require('express');
 const app = express();
@@ -16,6 +18,8 @@ const reviews = require('./routes/reviews');
 const users = require('./routes/users');
 
 require('./utils/auth')(passport);
+
+
 
 const sessionConfig = {
     secret: '123',
