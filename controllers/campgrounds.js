@@ -46,6 +46,7 @@ module.exports.insertCamp = (req, res) => {
         const userId = req.user.id; 
         const { title, price, description, location } = req.body.campground;
 
+
         const image = req.file.path; 
 
         connection.query(
